@@ -5,6 +5,7 @@ import com.lineacademy.fridgemanagerprev.domain.common.BaseTimeEntity;
 import com.lineacademy.fridgemanagerprev.domain.enums.Roletype;
 import com.lineacademy.fridgemanagerprev.domain.firdge.Fridge;
 import com.lineacademy.fridgemanagerprev.domain.inquiry.Inquiry;
+import com.lineacademy.fridgemanagerprev.domain.shoppinglist.ShoppingList;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,8 +43,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private Roletype role = Roletype.USER;
 
-    // TODO: 다른 테이블과의 관계를 기록해줘야 함
-
     // mappedBy = "user"는 Fridge 엔티티에 만들어질 user 필드명
     // cascade는, 연결지을 이 user가 삭제될 경우 연결될 fridge는 어떻게 할까?
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -54,6 +53,9 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Inquiry> inquiries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ShoppingList> shoppingLists = new ArrayList<>();
 
     @Builder
     private User(String nickname, String password, String email, LocalDateTime birthdate, Roletype role) {
