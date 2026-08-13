@@ -32,8 +32,9 @@ public class Fridge extends BaseTimeEntity {
 
 
     @Builder
-    public Fridge(String name) {
+    public Fridge(String name, User user) {
         this.name = name;
+        this.user = user;
     }
 
     public void updateName(String name) {
