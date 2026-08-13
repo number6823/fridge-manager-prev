@@ -1,5 +1,6 @@
 package com.lineacademy.fridgemanagerprev.domain.category;
 
+import com.lineacademy.fridgemanagerprev.domain.common.BaseTimeEntity;
 import com.lineacademy.fridgemanagerprev.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -7,10 +8,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Entity
 @Getter
 @Table(name = "category")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Category {
+public class Category extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
