@@ -4,6 +4,7 @@ import com.lineacademy.fridgemanagerprev.domain.category.Category;
 import com.lineacademy.fridgemanagerprev.domain.common.BaseTimeEntity;
 import com.lineacademy.fridgemanagerprev.domain.enums.Roletype;
 import com.lineacademy.fridgemanagerprev.domain.firdge.Fridge;
+import com.lineacademy.fridgemanagerprev.domain.inquiry.Inquiry;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,6 +51,9 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Category> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Inquiry> inquiries = new ArrayList<>();
 
     @Builder
     private User(String nickname, String password, String email, LocalDateTime birthdate, Roletype role) {
