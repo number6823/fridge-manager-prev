@@ -3,6 +3,7 @@ package com.lineacademy.fridgemanagerprev.service;
 import com.lineacademy.fridgemanagerprev.domain.firdge.Fridge;
 import com.lineacademy.fridgemanagerprev.domain.user.User;
 import com.lineacademy.fridgemanagerprev.dto.user.requst.CreateUserRequest;
+import com.lineacademy.fridgemanagerprev.dto.user.requst.LoginRequest;
 import com.lineacademy.fridgemanagerprev.repository.FridgeRepository;
 import com.lineacademy.fridgemanagerprev.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -46,7 +47,7 @@ public class UserService {
         }
         // 입력된 birthdate는 String이니까 이걸 LocalDate 객체로 변환
         LocalDate parsedBirthdate = null;
-        // 사용자가 ㅣㅇㅂ력한 birthdate가 null이 아니면서 빈값("")도 아닐 경우
+        // 사용자가 입력한 birthdate가 null이 아니면서 빈값("")도 아닐 경우
         if (request.getBirthdate() != null && request.getBirthdate().isBlank()) {
             parsedBirthdate = LocalDate.parse(request.getBirthdate(), DateTimeFormatter.ISO_DATE);
         }
@@ -59,13 +60,35 @@ public class UserService {
                 .birthdate(parsedBirthdate)
                 .build();
         userRepository.save(user);
-        // 2. 기본 냉장고 저장
 
+
+        // 2. 기본 냉장고 저장
         Fridge defaultFridge = Fridge.builder()
                 .name("내 냉장고")
                 .user(user)
                 .build();
         fridgeRepository.save(defaultFridge);
+
+        return user;
+    }
+
+    public User login(LoginRequest request) {
+        // 1. 받아온 값을 통해 사용자가 있는지 확인하고
+        //  함수처럼 만들어서 쓸 수 있는게 Java에서 지원되지만 함수는 아니고
+        // 람다 표현식 () ->
+        User user = userRepository.findByEmail(request.getEmail())
+        .orElseThrow(() -> new RuntimeException("INVALID_CREDENTIALS"));
+
+
+        // 2. 사용자가 존재한다면, 탈퇴된 회원인지를 검사하고
+        if (user.getDeletedAt() != null) {
+            throw new RuntimeException("INVALID_CREDENTIALS");
+        }
+
+        // 3. 비밀번호가 일치하는지 확인하고
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("INVALID_CREDENTIALS");
+        }
 
         return user;
     }
