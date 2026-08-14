@@ -37,4 +37,16 @@ public class NoticeService {
 
         return noticeRepository.save(notice);
     }
+
+    // 진짜 삭제 하는 메서드
+    @Transactional
+    public void deleteNotice(Long noticeId) {
+        Notice notice = getNoticeById(noticeId);
+        if (notice != null) {
+            noticeRepository.delete(notice);
+        } else {
+            throw new IllegalArgumentException("NOT_FOUND_NOTICE");
+        }
+
+    }
 }
