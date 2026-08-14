@@ -1,6 +1,7 @@
 package com.lineacademy.fridgemanagerprev.controller;
 
 import com.lineacademy.fridgemanagerprev.domain.user.User;
+import com.lineacademy.fridgemanagerprev.dto.user.UpdateUserRequest;
 import com.lineacademy.fridgemanagerprev.dto.user.requst.CreateUserRequest;
 import com.lineacademy.fridgemanagerprev.dto.user.requst.LoginRequest;
 import com.lineacademy.fridgemanagerprev.dto.user.response.UserResponse;
@@ -8,12 +9,13 @@ import com.lineacademy.fridgemanagerprev.service.UserService;
 import com.lineacademy.fridgemanagerprev.utils.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -25,7 +27,6 @@ public class UserController {
     // UserService 객체를 주입받아 회원가입 로직을 사용함
     private final UserService userService;
     private final JwtUtil jwtUtil; // Bean이기 떄문에 새로 생성하는게 아니라 있는 걸 불러오게 됨
-
 
 
     @PostMapping("/create")
@@ -84,23 +85,22 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequest request
-            ) {
+    ) {
         try {
             // 1. 사용자가 입력해온 값을 DB에서 조회해서 있는지 확인
             User user = userService.login(request);
 
             // 2. 토큰을 생성해서 response 전달
-           String token = jwtUtil.generateToken(user.getId());
+            String token = jwtUtil.generateToken(user.getId());
 
 
-
-           return ResponseEntity.ok(Map.of(
-                   "message", "로그인에 성공했습니다",
-                   "data", Map.of(
-                           "user", UserResponse.from(user),
-                           "token",token
-                   )
-           ));
+            return ResponseEntity.ok(Map.of(
+                    "message", "로그인에 성공했습니다",
+                    "data", Map.of(
+                            "user", UserResponse.from(user),
+                            "token", token
+                    )
+            ));
         } catch (RuntimeException e) {
             if (e.getMessage().equals("INVALID_CREDENTIALS")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -110,6 +110,44 @@ public class UserController {
             return ResponseEntity.status(500).body(Map.of(
                     "message", "서버 에러"
             ));
+        }
+    }
+
+    // 이미 SecurityContfig에서 사용자를 확인하였고, 로그인된 요청이라는걸 알기 떄문에 여기에 도달할 수 있는 건 맞음
+    @PreAuthorize("isAuthenticated()") // 인증된 회원인지 여부를 검사하는 어노테이션
+    @PatchMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateUser(
+            @AuthenticationPrincipal Long currentUserId, // 로그인 사용자 ID를 꺼내옴
+            @Valid @RequestBody UpdateUserRequest request
+    ) {
+        try {
+            User updatedUser = userService.updateUser(currentUserId, request);
+            return ResponseEntity.ok(Map.of(
+                    "message", "회원정보가 성공적으로 수정되었습니다.",
+                    "data", UserResponse.from(updatedUser)
+            ));
+        } catch (RuntimeException e) {
+            if ("ALREADY_EXISTS_EMAIL".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                "message", "해당 사용자를 찾을 수 없습니다."
+                        ));
+            }
+
+            // 닉네임 중복
+            if ("DUPLICATED_NICKNAME".equals(e.getMessage())) {
+                return ResponseEntity
+                        .status(HttpStatus.CONFLICT)
+                        .body(Map.of(
+                                "message", "이미 사용 중인 닉네임입니다."
+                        ));
+            }
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "message", "서버 오류가 발생했습니다."
+                    ));
         }
     }
 }
