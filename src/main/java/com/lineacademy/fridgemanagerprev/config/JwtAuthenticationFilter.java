@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
-            ) throws Servele, IOException {
+            ) throws Servel, IOException {
         // 1. 헤더에서 토큰 추출
         String bearerToken = request.getHeader("Authorization");   // "Bearer
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
